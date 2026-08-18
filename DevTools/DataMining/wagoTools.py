@@ -32,7 +32,7 @@ def downloadWagoTablesCSV(wagoTables, buildVersion=None):
         buildParameter = f"?build={buildVersion}"
         if buildVersion == None:
             buildParameter = ""
-        download = httpx.get(f"https://wago.tools/db2/{table}/csv{buildParameter}")
+        download = httpx.get(f"https://wago.tools/db2/{table}/csv{buildParameter}", timeout=120.0)
         decoded_content = download.content.decode('utf-8')
         with open(filename, 'w', errors="replace") as f:
             f.writelines(decoded_content)
