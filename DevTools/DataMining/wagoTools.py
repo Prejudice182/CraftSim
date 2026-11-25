@@ -1,7 +1,9 @@
-import httpx
 import os
-import luadata
 import csv
+import time
+
+import httpx
+import luadata
 
 dataDirectoryPrefix = "_Data/"
 resultDirectoryPrefix = "_Result/"
@@ -32,7 +34,20 @@ def downloadWagoTablesCSV(wagoTables, buildVersion=None):
         buildParameter = f"?build={buildVersion}"
         if buildVersion == None:
             buildParameter = ""
-        download = httpx.get(f"https://wago.tools/db2/{table}/csv{buildParameter}")
+        url = f"https://wago.tools/db2/{table}/csv{buildParameter}"
+        for attempt in range(4):
+            try:
+                download = httpx.get(
+                    url,
+                    timeout=httpx.Timeout(connect=10, read=120, write=30, pool=10),
+                )
+                download.raise_for_status()
+                break
+            except httpx.TimeoutException:
+                if attempt == 3:
+                    raise
+                time.sleep(2 ** attempt)
+
         decoded_content = download.content.decode('utf-8')
         with open(filename, 'w', errors="replace") as f:
             f.writelines(decoded_content)
